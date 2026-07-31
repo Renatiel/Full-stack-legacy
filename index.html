@@ -1,0 +1,269 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Fichário de Citações</title>
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,500;0,700;1,500&family=Courier+Prime:wght@400;700&display=swap" rel="stylesheet">
+
+<style>
+  :root{
+    --paper: #f1ead9;
+    --paper-dark: #e6dcc4;
+    --ink: #241f18;
+    --ink-soft: #5b5348;
+    --stamp-red: #a4402f;
+    --stamp-blue: #3d5a63;
+    --line: #c9bfa4;
+    --card-w: 560px;
+  }
+
+  * { box-sizing: border-box; }
+
+  html, body {
+    margin: 0;
+    padding: 0;
+    min-height: 100%;
+  }
+
+  body {
+    background-color: var(--paper);
+    background-image:
+      radial-gradient(circle at 1px 1px, rgba(36,31,24,0.06) 1px, transparent 0);
+    background-size: 22px 22px;
+    color: var(--ink);
+    font-family: 'Courier Prime', monospace;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 100vh;
+    padding: 32px 16px;
+  }
+
+  #quote-box {
+    position: relative;
+    width: 100%;
+    max-width: var(--card-w);
+    background: var(--paper-dark);
+    border: 1px solid var(--line);
+    box-shadow:
+      0 1px 0 rgba(255,255,255,0.6) inset,
+      0 18px 40px -18px rgba(36,31,24,0.35),
+      0 2px 0 var(--line);
+    padding: 44px 40px 36px;
+    animation: settle 0.5s ease-out;
+  }
+
+  @keyframes settle {
+    from { opacity: 0; transform: translateY(10px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+
+  /* punch holes, like a library index card */
+  #quote-box::before,
+  #quote-box::after {
+    content: "";
+    position: absolute;
+    top: 18px;
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    background: var(--paper);
+    box-shadow: inset 0 2px 3px rgba(36,31,24,0.4);
+  }
+  #quote-box::before { left: 20px; }
+  #quote-box::after { right: 20px; }
+
+  .eyebrow {
+    font-size: 11px;
+    letter-spacing: 0.22em;
+    text-transform: uppercase;
+    color: var(--ink-soft);
+    text-align: center;
+    margin: 0 0 26px;
+  }
+
+  #text {
+    font-family: 'Playfair Display', serif;
+    font-weight: 500;
+    font-style: italic;
+    font-size: clamp(22px, 4vw, 30px);
+    line-height: 1.42;
+    color: var(--ink);
+    text-align: center;
+    margin: 0 0 20px;
+    min-height: 90px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: opacity 0.25s ease;
+  }
+
+  #text::before { content: "“"; }
+  #text::after { content: "”"; }
+
+  #author {
+    font-size: 14px;
+    letter-spacing: 0.04em;
+    text-align: center;
+    color: var(--stamp-blue);
+    font-weight: 700;
+    margin: 0 0 30px;
+  }
+
+  #author::before { content: "— "; }
+
+  .card-footer {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding-top: 20px;
+    border-top: 1px dashed var(--line);
+  }
+
+  #tweet-quote {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 40px;
+    height: 40px;
+    border: 1px solid var(--ink);
+    border-radius: 50%;
+    color: var(--ink);
+    text-decoration: none;
+    transition: background 0.15s ease, color 0.15s ease, transform 0.15s ease;
+    flex-shrink: 0;
+  }
+
+  #tweet-quote:hover {
+    background: var(--ink);
+    color: var(--paper-dark);
+    transform: translateY(-1px);
+  }
+
+  #tweet-quote svg { width: 18px; height: 18px; fill: currentColor; }
+
+  #new-quote {
+    font-family: 'Courier Prime', monospace;
+    font-weight: 700;
+    font-size: 12px;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    background: var(--ink);
+    color: var(--paper-dark);
+    border: none;
+    padding: 12px 22px;
+    cursor: pointer;
+    transition: background 0.15s ease, transform 0.1s ease;
+  }
+
+  #new-quote:hover { background: #3a3225; }
+  #new-quote:active { transform: scale(0.97); }
+
+  .stamp {
+    position: absolute;
+    top: -14px;
+    right: 28px;
+    background: var(--stamp-red);
+    color: var(--paper-dark);
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    padding: 6px 10px;
+    transform: rotate(4deg);
+    box-shadow: 0 3px 6px rgba(0,0,0,0.25);
+    user-select: none;
+  }
+
+  @media (max-width: 480px) {
+    #quote-box { padding: 40px 22px 28px; }
+  }
+</style>
+</head>
+<body>
+
+<div id="root"></div>
+
+<script src="https://unpkg.com/react@18/umd/react.production.min.js" crossorigin></script>
+<script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js" crossorigin></script>
+<script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+
+<script type="text/babel" data-presets="react">
+const { useState, useEffect, useRef } = React;
+
+const QUOTES = [
+  { text: "A persistência é o caminho do êxito.", author: "Charles Chaplin" },
+  { text: "Não é o mais forte que sobrevive, nem o mais inteligente, mas o mais adaptável às mudanças.", author: "Charles Darwin" },
+  { text: "Tudo o que um sonho precisa para ser realizado é alguém que acredite que ele possa ser realizado.", author: "Roberto Shinyashiki" },
+  { text: "A imaginação é mais importante que o conhecimento.", author: "Albert Einstein" },
+  { text: "Não vou onde a lógica me leva, vou onde a curiosidade me leva.", author: "Machado de Assis" },
+  { text: "O único lugar onde o sucesso vem antes do trabalho é no dicionário.", author: "Albert Einstein" },
+  { text: "A vida é aquilo que acontece enquanto você está ocupado fazendo outros planos.", author: "John Lennon" },
+  { text: "Que os vossos esforços desafiem as impossibilidades, lembrai-vos de que as grandes coisas do homem foram conquistadas do que parecia impossível.", author: "Charles Chaplin" },
+  { text: "Só existem dois dias no ano em que nada pode ser feito. Um se chama ontem e o outro se chama amanhã.", author: "Dalai Lama" },
+  { text: "A menos que modifiquemos a nossa maneira de pensar, não seremos capazes de resolver os problemas causados pela forma como nos acostumamos a ver o mundo.", author: "Albert Einstein" },
+  { text: "Feliz aquele que transfere o que sabe e aprende o que ensina.", author: "Cora Coralina" },
+  { text: "Se a educação sozinha não transforma a sociedade, sem ela tampouco a sociedade muda.", author: "Paulo Freire" },
+  { text: "É melhor conquistar a si mesmo do que vencer mil batalhas.", author: "Buda" },
+  { text: "Talvez não tenha conseguido fazer o melhor, mas lutei para que o melhor fosse feito. Não sou o que deveria ser, mas graças a Deus, não sou o que era antes.", author: "Marthin Luther King" },
+  { text: "Aprender é a única coisa de que a mente nunca se cansa, nunca tem medo e nunca se arrepende.", author: "Leonardo da Vinci" },
+];
+
+function pickIndex(exclude) {
+  if (QUOTES.length === 1) return 0;
+  let i;
+  do { i = Math.floor(Math.random() * QUOTES.length); } while (i === exclude);
+  return i;
+}
+
+function App() {
+  const [index, setIndex] = useState(() => Math.floor(Math.random() * QUOTES.length));
+  const [visible, setVisible] = useState(true);
+  const currentRef = useRef(QUOTES[index]);
+  currentRef.current = QUOTES[index];
+
+  function handleNewQuote() {
+    setVisible(false);
+    setTimeout(() => {
+      setIndex(prev => pickIndex(prev));
+      setVisible(true);
+    }, 180);
+  }
+
+  const quote = QUOTES[index];
+  const tweetHref =
+    "https://twitter.com/intent/tweet?text=" +
+    encodeURIComponent(`"${quote.text}" — ${quote.author}`);
+
+  return (
+    <div id="quote-box">
+      <div className="stamp">Nº {String(index + 1).padStart(3, "0")}</div>
+      <p className="eyebrow">Fichário de citações</p>
+      <p id="text" style={{ opacity: visible ? 1 : 0 }}>{quote.text}</p>
+      <p id="author" style={{ opacity: visible ? 1 : 0 }}>{quote.author}</p>
+      <div className="card-footer">
+        <a
+          id="tweet-quote"
+          href={tweetHref}
+          target="_blank"
+          rel="noopener noreferrer"
+          title="Tuitar esta citação"
+        >
+          <svg viewBox="0 0 24 24" aria-hidden="true">
+            <path d="M23.643 4.937c-.835.37-1.732.62-2.675.733a4.67 4.67 0 0 0 2.048-2.578 9.3 9.3 0 0 1-2.958 1.13 4.66 4.66 0 0 0-7.938 4.25 13.229 13.229 0 0 1-9.602-4.868c-.4.69-.63 1.49-.63 2.342 0 1.616.823 3.043 2.072 3.878a4.647 4.647 0 0 1-2.11-.583v.06a4.66 4.66 0 0 0 3.737 4.568 4.692 4.692 0 0 1-2.104.08 4.661 4.661 0 0 0 4.352 3.234 9.348 9.348 0 0 1-5.786 1.995 9.5 9.5 0 0 1-1.112-.065 13.175 13.175 0 0 0 7.14 2.093c8.57 0 13.255-7.098 13.255-13.254 0-.202-.005-.403-.014-.602a9.47 9.47 0 0 0 2.323-2.41z"/>
+          </svg>
+        </a>
+        <button id="new-quote" onClick={handleNewQuote}>Nova citação</button>
+      </div>
+    </div>
+  );
+}
+
+ReactDOM.createRoot(document.getElementById("root")).render(<App />);
+</script>
+
+<script src="https://cdn.freecodecamp.org/testable-projects-fcc/v1/bundle.js"></script>
+</body>
+</html>
