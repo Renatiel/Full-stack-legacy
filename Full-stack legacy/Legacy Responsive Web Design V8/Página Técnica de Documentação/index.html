@@ -1,0 +1,287 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Guia Rápido de Git &mdash; Documentação</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;700&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg: #0b1220;
+    --bg-line: rgba(102,163,210,0.08);
+    --panel: #101a2c;
+    --panel-border: #1e2c44;
+    --ink: #dbe6f2;
+    --ink-soft: #8fa2bd;
+    --cyan: #5fd0d9;
+    --amber: #e8a94a;
+    --code-bg: #0a1524;
+  }
+
+  *{ box-sizing: border-box; }
+
+  html{ scroll-behavior: smooth; }
+
+  body{
+    margin: 0;
+    background: var(--bg);
+    background-image:
+      linear-gradient(var(--bg-line) 1px, transparent 1px),
+      linear-gradient(90deg, var(--bg-line) 1px, transparent 1px);
+    background-size: 32px 32px;
+    color: var(--ink);
+    font-family: 'Space Grotesk', Arial, sans-serif;
+    line-height: 1.65;
+  }
+
+  a{ color: var(--cyan); }
+
+  code{
+    font-family: 'JetBrains Mono', monospace;
+    background: var(--code-bg);
+    border: 1px solid var(--panel-border);
+    color: var(--amber);
+    padding: 2px 6px;
+    border-radius: 4px;
+    font-size: 0.9em;
+  }
+
+  pre code{
+    display: block;
+    padding: 14px 16px;
+    overflow-x: auto;
+    line-height: 1.5;
+  }
+
+  /* ---------- NAV ---------- */
+  #navbar{
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 250px;
+    height: 100vh;
+    background: var(--panel);
+    border-right: 1px solid var(--panel-border);
+    overflow-y: auto;
+    padding: 28px 0 40px;
+  }
+
+  #navbar header{
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 13px;
+    letter-spacing: 1px;
+    color: var(--cyan);
+    padding: 0 24px 20px;
+    border-bottom: 1px solid var(--panel-border);
+    margin-bottom: 12px;
+  }
+
+  #navbar header .dot{
+    display: inline-block;
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: var(--amber);
+    margin-right: 8px;
+  }
+
+  .nav-link{
+    display: block;
+    padding: 10px 24px;
+    color: var(--ink-soft);
+    text-decoration: none;
+    font-size: 14.5px;
+    border-left: 2px solid transparent;
+    transition: background 0.15s ease, color 0.15s ease, border-color 0.15s ease;
+  }
+
+  .nav-link:hover{
+    background: rgba(95,208,217,0.08);
+    color: var(--ink);
+    border-left-color: var(--cyan);
+  }
+
+  /* ---------- MAIN ---------- */
+  #main-doc{
+    margin-left: 250px;
+    max-width: 760px;
+    padding: 56px 48px 100px;
+  }
+
+  .doc-eyebrow{
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12px;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: var(--amber);
+    margin: 0 0 8px;
+  }
+
+  .doc-title{
+    font-size: 32px;
+    margin: 0 0 40px;
+  }
+
+  .main-section{
+    padding-top: 30px;
+    margin-bottom: 46px;
+    border-top: 1px solid var(--panel-border);
+  }
+
+  .main-section:first-of-type{
+    border-top: none;
+    padding-top: 0;
+  }
+
+  .main-section header{
+    font-size: 22px;
+    color: var(--ink);
+    margin: 0 0 16px;
+    display: flex;
+    align-items: baseline;
+    gap: 10px;
+  }
+
+  .main-section header::before{
+    content: attr(data-index);
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 13px;
+    color: var(--cyan);
+  }
+
+  .main-section p{
+    color: var(--ink-soft);
+    margin: 0 0 14px;
+  }
+
+  .main-section ul{
+    color: var(--ink-soft);
+    padding-left: 20px;
+    margin: 0 0 16px;
+  }
+
+  .main-section li{
+    margin-bottom: 6px;
+  }
+
+  .main-section pre{
+    margin: 0 0 16px;
+    background: var(--code-bg);
+    border: 1px solid var(--panel-border);
+    border-radius: 8px;
+  }
+
+  @media (max-width: 800px){
+    #navbar{
+      width: 190px;
+      padding: 20px 0 30px;
+    }
+    #navbar header{
+      padding: 0 16px 16px;
+      font-size: 11.5px;
+    }
+    .nav-link{
+      padding: 9px 16px;
+      font-size: 13px;
+    }
+    #main-doc{
+      margin-left: 190px;
+      padding: 40px 22px 80px;
+    }
+    .doc-title{ font-size: 26px; }
+  }
+</style>
+</head>
+<body>
+
+  <nav id="navbar">
+    <header><span class="dot"></span>Guia Rápido de Git</header>
+    <a class="nav-link" href="#Introdução">Introdução</a>
+    <a class="nav-link" href="#Configuração_Inicial">Configuração Inicial</a>
+    <a class="nav-link" href="#Comandos_Básicos">Comandos Básicos</a>
+    <a class="nav-link" href="#Branches_e_Merge">Branches e Merge</a>
+    <a class="nav-link" href="#Trabalhando_com_Remotos">Trabalhando com Remotos</a>
+    <a class="nav-link" href="#Desfazendo_Alterações">Desfazendo Alterações</a>
+  </nav>
+
+  <main id="main-doc">
+    <p class="doc-eyebrow">Referência de bolso &middot; linha de comando</p>
+    <h1 class="doc-title">Guia Rápido de Git</h1>
+
+    <section class="main-section" id="Introdução">
+      <header data-index="01">Introdução</header>
+      <p>Git é um sistema de controle de versão distribuído. Cada cópia do repositório carrega o histórico completo do projeto, então você pode trabalhar offline e sincronizar quando quiser.</p>
+      <p>Este guia reúne os comandos que mais aparecem no dia a dia, sem tentar cobrir cada opção existente — apenas o essencial para manter um fluxo de trabalho tranquilo.</p>
+      <ul>
+        <li>Funciona de forma local, sem depender de um servidor central</li>
+        <li>Guarda snapshots do projeto, não apenas diferenças entre arquivos</li>
+        <li>É a base de plataformas como GitHub, GitLab e Bitbucket</li>
+      </ul>
+    </section>
+
+    <section class="main-section" id="Configuração_Inicial">
+      <header data-index="02">Configuração Inicial</header>
+      <p>Antes do primeiro commit, informe seu nome e e-mail. Essas informações ficam registradas em cada alteração que você enviar.</p>
+      <pre><code>git config --global user.name "Seu Nome"
+git config --global user.email "voce@exemplo.com"</code></pre>
+      <p>Para transformar uma pasta comum em um repositório Git, use <code>git init</code>. Para copiar um repositório já existente, use <code>git clone</code>.</p>
+      <pre><code>git init
+git clone https://github.com/usuario/projeto.git</code></pre>
+    </section>
+
+    <section class="main-section" id="Comandos_Básicos">
+      <header data-index="03">Comandos Básicos</header>
+      <p>O ciclo mais comum envolve verificar o estado dos arquivos, adicioná-los à área de preparação e registrar as mudanças em um commit.</p>
+      <pre><code>git status
+git add arquivo.txt
+git commit -m "Mensagem descrevendo a mudança"</code></pre>
+      <p>Alguns comandos úteis para o dia a dia:</p>
+      <ul>
+        <li><code>git status</code> mostra o que mudou desde o último commit</li>
+        <li><code>git add .</code> prepara todos os arquivos modificados</li>
+        <li><code>git log</code> lista o histórico de commits</li>
+        <li><code>git diff</code> mostra as diferenças linha a linha</li>
+      </ul>
+    </section>
+
+    <section class="main-section" id="Branches_e_Merge">
+      <header data-index="04">Branches e Merge</header>
+      <p>Branches permitem desenvolver uma funcionalidade sem afetar o código principal. Quando o trabalho estiver pronto, ele pode ser incorporado de volta.</p>
+      <pre><code>git branch nova-funcionalidade
+git checkout nova-funcionalidade
+git checkout -b outra-forma-de-criar-e-trocar</code></pre>
+      <p>Para juntar o trabalho de um branch em outro, use <code>git merge</code> a partir do branch de destino.</p>
+      <pre><code>git checkout main
+git merge nova-funcionalidade</code></pre>
+      <ul>
+        <li>Prefira nomes de branch curtos e descritivos</li>
+        <li>Resolva conflitos com calma, editando os arquivos marcados</li>
+      </ul>
+    </section>
+
+    <section class="main-section" id="Trabalhando_com_Remotos">
+      <header data-index="05">Trabalhando com Remotos</header>
+      <p>Um repositório remoto é uma cópia do projeto hospedada em outro lugar, geralmente usada para colaborar com outras pessoas.</p>
+      <pre><code>git remote add origin https://github.com/usuario/projeto.git
+git push -u origin main
+git pull origin main</code></pre>
+      <ul>
+        <li><code>git push</code> envia seus commits locais para o remoto</li>
+        <li><code>git pull</code> traz e mescla as mudanças do remoto</li>
+        <li><code>git fetch</code> baixa as mudanças sem mesclar automaticamente</li>
+      </ul>
+    </section>
+
+    <section class="main-section" id="Desfazendo_Alterações">
+      <header data-index="06">Desfazendo Alterações</header>
+      <p>Nem todo commit é definitivo. Git oferece algumas formas de voltar atrás, dependendo de quão longe você já foi.</p>
+      <pre><code>git restore arquivo.txt
+git reset --soft HEAD~1
+git revert &lt;hash-do-commit&gt;</code></pre>
+      <p><code>git restore</code> descarta mudanças não commitadas, <code>git reset</code> reescreve o histórico local e <code>git revert</code> cria um novo commit desfazendo outro, com segurança para históricos já compartilhados.</p>
+    </section>
+  </main>
+
+</body>
+</html>

@@ -1,0 +1,419 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Lampião &mdash; luminária de leitura inteligente</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,700&family=Karla:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --cream: #f7f0e2;
+    --cream-soft: #fbf7ee;
+    --ink: #2c2115;
+    --ink-soft: #6b5f4d;
+    --wood: #4a2c18;
+    --amber: #d9a441;
+    --amber-dark: #b8823a;
+    --glow: #ffe9b8;
+  }
+
+  *{ box-sizing: border-box; }
+
+  html{ scroll-behavior: smooth; }
+
+  body{
+    margin: 0;
+    background: var(--cream);
+    color: var(--ink);
+    font-family: 'Karla', Arial, sans-serif;
+    line-height: 1.6;
+  }
+
+  h1, h2{
+    font-family: 'Fraunces', Georgia, serif;
+    margin: 0;
+  }
+
+  section{
+    padding: 80px 24px;
+  }
+
+  .section-inner{
+    max-width: 1000px;
+    margin: 0 auto;
+  }
+
+  /* ---------- HEADER / NAV ---------- */
+  #header{
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    z-index: 100;
+    background: var(--wood);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 14px 28px;
+  }
+
+  #header-img{
+    height: 34px;
+    width: 34px;
+    border-radius: 50%;
+  }
+
+  .brand{
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    color: var(--cream);
+    font-family: 'Fraunces', serif;
+    font-size: 19px;
+    letter-spacing: 0.4px;
+  }
+
+  #nav-bar{
+    display: flex;
+    gap: 8px;
+  }
+
+  .nav-link{
+    color: var(--cream);
+    text-decoration: none;
+    font-size: 14.5px;
+    padding: 8px 14px;
+    border-radius: 20px;
+    border: 1px solid transparent;
+    background: none;
+    cursor: pointer;
+    font-family: 'Karla', sans-serif;
+    transition: border-color 0.2s ease, background 0.2s ease;
+  }
+
+  .nav-link:hover{
+    border-color: var(--amber);
+    background: rgba(217,164,65,0.12);
+  }
+
+  /* ---------- HERO ---------- */
+  #hero{
+    padding-top: 150px;
+    background:
+      radial-gradient(circle at 80% 20%, rgba(217,164,65,0.18), transparent 45%),
+      var(--cream);
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 40px;
+  }
+
+  #hero .section-inner{
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 40px;
+  }
+
+  .hero-copy{
+    flex: 1 1 360px;
+  }
+
+  .eyebrow{
+    font-size: 12px;
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    color: var(--amber-dark);
+    margin: 0 0 12px;
+  }
+
+  .hero-copy h1{
+    font-size: clamp(32px, 5vw, 48px);
+    margin-bottom: 18px;
+    line-height: 1.15;
+  }
+
+  .hero-copy p{
+    color: var(--ink-soft);
+    max-width: 46ch;
+    margin-bottom: 26px;
+  }
+
+  .btn{
+    display: inline-block;
+    background: var(--ink);
+    color: var(--cream);
+    text-decoration: none;
+    padding: 13px 28px;
+    border-radius: 30px;
+    font-weight: 700;
+    font-size: 14.5px;
+    letter-spacing: 0.4px;
+    transition: transform 0.15s ease, background 0.15s ease;
+  }
+
+  .btn:hover{
+    background: var(--amber-dark);
+    transform: translateY(-2px);
+  }
+
+  .hero-visual{
+    flex: 1 1 280px;
+    display: flex;
+    justify-content: center;
+  }
+
+  .lamp-badge{
+    width: 220px;
+    height: 220px;
+    border-radius: 50%;
+    background: radial-gradient(circle at 40% 35%, var(--glow), var(--amber) 70%);
+    box-shadow: 0 30px 60px -20px rgba(217,164,65,0.55);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: 'Fraunces', serif;
+    font-size: 15px;
+    color: var(--wood);
+    text-align: center;
+    padding: 20px;
+  }
+
+  /* ---------- FEATURES ---------- */
+  #features{
+    background: var(--cream-soft);
+  }
+
+  .section-head{
+    text-align: center;
+    margin-bottom: 46px;
+  }
+
+  .section-head h2{
+    font-size: 30px;
+    margin-bottom: 10px;
+  }
+
+  .section-head p{
+    color: var(--ink-soft);
+    max-width: 46ch;
+    margin: 0 auto;
+  }
+
+  .feature-grid{
+    display: flex;
+    flex-wrap: wrap;
+    gap: 24px;
+    justify-content: center;
+  }
+
+  .feature-card{
+    flex: 1 1 260px;
+    max-width: 300px;
+    background: #fff;
+    border: 1px solid #ecdfc4;
+    border-radius: 14px;
+    padding: 26px;
+  }
+
+  .feature-card .icon{
+    width: 40px;
+    height: 40px;
+    border-radius: 10px;
+    background: var(--amber);
+    margin-bottom: 14px;
+  }
+
+  .feature-card h3{
+    font-family: 'Fraunces', serif;
+    font-size: 18px;
+    margin: 0 0 8px;
+  }
+
+  .feature-card p{
+    color: var(--ink-soft);
+    font-size: 14.5px;
+    margin: 0;
+  }
+
+  /* ---------- VIDEO ---------- */
+  #video-section{
+    text-align: center;
+  }
+
+  #video{
+    width: 100%;
+    max-width: 720px;
+    border-radius: 14px;
+    box-shadow: 0 24px 50px -20px rgba(74,44,24,0.35);
+    margin-top: 10px;
+  }
+
+  /* ---------- FORM ---------- */
+  #form-section{
+    background: var(--wood);
+    color: var(--cream);
+  }
+
+  #form-section .section-head p{
+    color: rgba(247,240,226,0.75);
+  }
+
+  #form{
+    max-width: 420px;
+    margin: 0 auto;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
+    justify-content: center;
+  }
+
+  #email{
+    flex: 1 1 240px;
+    padding: 13px 16px;
+    border-radius: 30px;
+    border: 1px solid rgba(247,240,226,0.3);
+    background: rgba(247,240,226,0.08);
+    color: var(--cream);
+    font-size: 15px;
+  }
+
+  #email::placeholder{
+    color: rgba(247,240,226,0.55);
+  }
+
+  #submit{
+    padding: 13px 28px;
+    border-radius: 30px;
+    border: none;
+    background: var(--amber);
+    color: var(--wood);
+    font-weight: 700;
+    font-size: 14.5px;
+    cursor: pointer;
+    transition: background 0.15s ease;
+  }
+
+  #submit:hover{
+    background: var(--glow);
+  }
+
+  /* ---------- FOOTER ---------- */
+  #footer{
+    text-align: center;
+    padding: 34px 24px;
+    font-size: 12px;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    color: var(--ink-soft);
+  }
+
+  @media (max-width: 640px){
+    #header{
+      flex-direction: column;
+      gap: 10px;
+      padding: 12px 16px;
+    }
+    #nav-bar{
+      flex-wrap: wrap;
+      justify-content: center;
+    }
+    #hero{
+      padding-top: 190px;
+    }
+    section{
+      padding: 56px 18px;
+    }
+    #form{
+      flex-direction: column;
+      align-items: stretch;
+    }
+  }
+</style>
+</head>
+<body>
+
+  <header id="header">
+    <div class="brand">
+      <img id="header-img" src="https://em-content.zobj.net/source/apple/391/light-bulb_1f4a1.png" alt="Logotipo Lampião">
+      Lampião
+    </div>
+    <nav id="nav-bar">
+      <a class="nav-link" href="#features">Recursos</a>
+      <a class="nav-link" href="#video-section">Vídeo</a>
+      <a class="nav-link" href="#form-section">Assine</a>
+    </nav>
+  </header>
+
+  <section id="hero">
+    <div class="section-inner">
+      <div class="hero-copy">
+        <p class="eyebrow">Luz que acompanha a leitura</p>
+        <h1>Uma luminária que aprende o seu ritmo de leitura</h1>
+        <p>O Lampião ajusta o brilho e o tom de cor automaticamente conforme o horário, para que suas noites de leitura fiquem mais confortáveis, sem esforço para os olhos.</p>
+        <a class="btn" href="#form-section">Entrar na lista de espera</a>
+      </div>
+      <div class="hero-visual">
+        <div class="lamp-badge">Lampião<br>luz quente &middot; 2 anos de garantia</div>
+      </div>
+    </div>
+  </section>
+
+  <section id="features">
+    <div class="section-inner">
+      <div class="section-head">
+        <h2>Feito para longas sessões de leitura</h2>
+        <p>Três recursos que tornam o Lampião diferente de uma luminária comum.</p>
+      </div>
+      <div class="feature-grid">
+        <div class="feature-card">
+          <div class="icon"></div>
+          <h3>Brilho adaptativo</h3>
+          <p>Sensores ajustam a intensidade da luz de acordo com a claridade do ambiente ao longo do dia.</p>
+        </div>
+        <div class="feature-card">
+          <div class="icon"></div>
+          <h3>Temperatura de cor quente</h3>
+          <p>Tons mais amarelados à noite ajudam o corpo a relaxar antes de dormir.</p>
+        </div>
+        <div class="feature-card">
+          <div class="icon"></div>
+          <h3>Toque para regular</h3>
+          <p>Um simples toque na base controla intensidade, sem botões ou aplicativos complicados.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section id="video-section">
+    <div class="section-inner">
+      <div class="section-head">
+        <h2>Veja o Lampião em ação</h2>
+        <p>Um curto vídeo mostrando os ajustes automáticos de brilho durante uma noite de leitura.</p>
+      </div>
+      <video id="video" controls src="https://www.w3schools.com/html/mov_bbb.mp4" poster="https://em-content.zobj.net/source/apple/391/light-bulb_1f4a1.png">
+        Seu navegador não é compatível com vídeos incorporados.
+      </video>
+    </div>
+  </section>
+
+  <section id="form-section">
+    <div class="section-inner">
+      <div class="section-head">
+        <h2>Seja avisado no lançamento</h2>
+        <p>Deixe seu e-mail e enviamos uma mensagem assim que o Lampião estiver disponível.</p>
+      </div>
+      <form id="form" action="https://www.freecodecamp.org/email-submit" method="get">
+        <input type="email" id="email" name="email" placeholder="seuemail@exemplo.com" required>
+        <input type="submit" id="submit" value="Quero ser avisado">
+      </form>
+    </div>
+  </section>
+
+  <footer id="footer">
+    Lampião &middot; luminárias para quem lê até tarde
+  </footer>
+
+</body>
+</html>
