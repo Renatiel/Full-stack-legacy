@@ -1,0 +1,345 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Relógio 25 + 5 - freeCodeCamp</title>
+
+  <!-- Script do Test Suite do freeCodeCamp -->
+  <script src="https://cdn.freecodecamp.org/testable-projects-fcc/v1/bundle.js"></script>
+
+  <!-- React & React DOM (Versão 17 para compatibilidade total com a suíte de testes) -->
+  <script src="https://unpkg.com/react@17/umd/react.production.min.js" crossorigin></script>
+  <script src="https://unpkg.com/react-dom@17/umd/react-dom.production.min.js" crossorigin></script>
+
+  <!-- Babel para transpilar JSX em tempo de execução -->
+  <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+
+  <!-- FontAwesome para ícones -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      background: linear-gradient(135deg, #1e2022, #2d4059);
+      color: #ffffff;
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      min-height: 100vh;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+    }
+
+    .clock-container {
+      background-color: #222831;
+      border: 3px solid #393e46;
+      border-radius: 20px;
+      padding: 30px;
+      width: 360px;
+      box-shadow: 0 15px 30px rgba(0, 0, 0, 0.6);
+      text-align: center;
+    }
+
+    h1 {
+      font-size: 2rem;
+      margin-bottom: 25px;
+      color: #00adb5;
+      text-transform: uppercase;
+      letter-spacing: 2px;
+    }
+
+    .settings-container {
+      display: flex;
+      justify-content: space-between;
+      margin-bottom: 25px;
+    }
+
+    .setting-box {
+      width: 45%;
+    }
+
+    .label {
+      font-size: 0.95rem;
+      font-weight: 600;
+      color: #eeeeee;
+      margin-bottom: 8px;
+    }
+
+    .length-controls {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .btn-control {
+      background: #393e46;
+      color: #00adb5;
+      border: none;
+      border-radius: 50%;
+      width: 36px;
+      height: 36px;
+      font-size: 1.1rem;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .btn-control:hover {
+      background: #00adb5;
+      color: #222831;
+    }
+
+    .length-display {
+      font-size: 1.4rem;
+      font-weight: bold;
+      width: 30px;
+    }
+
+    .timer-box {
+      border: 4px solid #00adb5;
+      border-radius: 15px;
+      padding: 20px;
+      margin-bottom: 25px;
+      background-color: #1a1e24;
+      transition: border-color 0.3s ease;
+    }
+
+    .timer-box.break-mode {
+      border-color: #ff5722;
+    }
+
+    #timer-label {
+      font-size: 1.4rem;
+      font-weight: bold;
+      margin-bottom: 5px;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+    }
+
+    #time-left {
+      font-size: 3.5rem;
+      font-family: 'Courier New', Courier, monospace;
+      font-weight: bold;
+    }
+
+    .main-controls {
+      display: flex;
+      justify-content: center;
+      gap: 20px;
+    }
+
+    .btn-action {
+      background: #00adb5;
+      color: #222831;
+      border: none;
+      padding: 12px 24px;
+      border-radius: 8px;
+      font-size: 1.2rem;
+      font-weight: bold;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .btn-action:hover {
+      background: #393e46;
+      color: #00adb5;
+    }
+
+    #reset {
+      background: #ff5722;
+      color: #ffffff;
+    }
+
+    #reset:hover {
+      background: #393e46;
+      color: #ff5722;
+    }
+  </style>
+</head>
+<body>
+  <div id="root"></div>
+
+  <script type="text/babel">
+    const { useState, useEffect, useRef } = React;
+
+    function App() {
+      const [breakLength, setBreakLength] = useState(5);
+      const [sessionLength, setSessionLength] = useState(25);
+      const [timeLeft, setTimeLeft] = useState(25 * 60);
+      const [timerLabel, setTimerLabel] = useState("Session");
+      const [isRunning, setIsRunning] = useState(false);
+
+      const timerRef = useRef(null);
+      const audioRef = useRef(null);
+
+      // Formata segundos em mm:ss
+      const formatTime = (seconds) => {
+        const mins = Math.floor(seconds / 60);
+        const secs = seconds % 60;
+        return `${mins < 10 ? '0' : ''}${mins}:${secs < 10 ? '0' : ''}${secs}`;
+      };
+
+      // Gerencia decremento/incremento de Break
+      const handleBreakChange = (amount) => {
+        if (isRunning) return;
+        const newBreak = breakLength + amount;
+        if (newBreak > 0 && newBreak <= 60) {
+          setBreakLength(newBreak);
+        }
+      };
+
+      // Gerencia decremento/incremento de Session
+      const handleSessionChange = (amount) => {
+        if (isRunning) return;
+        const newSession = sessionLength + amount;
+        if (newSession > 0 && newSession <= 60) {
+          setSessionLength(newSession);
+          setTimeLeft(newSession * 60);
+        }
+      };
+
+      // Controle de Iniciar / Pausar
+      const handleStartStop = () => {
+        setIsRunning((prev) => !prev);
+      };
+
+      // Reset completo da aplicação
+      const handleReset = () => {
+        if (timerRef.current) clearInterval(timerRef.current);
+        setIsRunning(false);
+        setBreakLength(5);
+        setSessionLength(25);
+        setTimeLeft(25 * 60);
+        setTimerLabel("Session");
+
+        if (audioRef.current) {
+          audioRef.current.pause();
+          audioRef.current.currentTime = 0;
+        }
+      };
+
+      // Efeito principal do Cronômetro
+      useEffect(() => {
+        if (isRunning) {
+          timerRef.current = setInterval(() => {
+            setTimeLeft((prevTime) => {
+              if (prevTime === 0) {
+                // Toca o áudio no 00:00
+                if (audioRef.current) {
+                  audioRef.current.play();
+                }
+
+                // Troca entre Session e Break
+                if (timerLabel === "Session") {
+                  setTimerLabel("Break");
+                  return breakLength * 60;
+                } else {
+                  setTimerLabel("Session");
+                  return sessionLength * 60;
+                }
+              }
+              return prevTime - 1;
+            });
+          }, 1000);
+        } else {
+          if (timerRef.current) clearInterval(timerRef.current);
+        }
+
+        return () => {
+          if (timerRef.current) clearInterval(timerRef.current);
+        };
+      }, [isRunning, timerLabel, breakLength, sessionLength]);
+
+      return (
+        <div className="clock-container">
+          <h1>Relógio 25 + 5</h1>
+
+          <div className="settings-container">
+            {/* Controles do Break */}
+            <div className="setting-box">
+              <div id="break-label" className="label">Comprimento de Pausa</div>
+              <div className="length-controls">
+                <button
+                  id="break-decrement"
+                  className="btn-control"
+                  onClick={() => handleBreakChange(-1)}
+                >
+                  <i className="fas fa-arrow-down"></i>
+                </button>
+                <span id="break-length" className="length-display">{breakLength}</span>
+                <button
+                  id="break-increment"
+                  className="btn-control"
+                  onClick={() => handleBreakChange(1)}
+                >
+                  <i className="fas fa-arrow-up"></i>
+                </button>
+              </div>
+            </div>
+
+            {/* Controles da Session */}
+            <div className="setting-box">
+              <div id="session-label" className="label">Comprimento Sessão</div>
+              <div className="length-controls">
+                <button
+                  id="session-decrement"
+                  className="btn-control"
+                  onClick={() => handleSessionChange(-1)}
+                >
+                  <i className="fas fa-arrow-down"></i>
+                </button>
+                <span id="session-length" className="length-display">{sessionLength}</span>
+                <button
+                  id="session-increment"
+                  className="btn-control"
+                  onClick={() => handleSessionChange(1)}
+                >
+                  <i className="fas fa-arrow-up"></i>
+                </button>
+              </div>
+            </div>
+          </div>
+
+          {/* Monitor do Timer */}
+          <div className={`timer-box ${timerLabel === 'Break' ? 'break-mode' : ''}`}>
+            <div id="timer-label">{timerLabel}</div>
+            <div id="time-left">{formatTime(timeLeft)}</div>
+          </div>
+
+          {/* Ações Principal */}
+          <div className="main-controls">
+            <button id="start_stop" className="btn-action" onClick={handleStartStop}>
+              <i className={`fas ${isRunning ? 'fa-pause' : 'fa-play'}`}></i>
+              {isRunning ? 'Pausar' : 'Iniciar'}
+            </button>
+            <button id="reset" className="btn-action" onClick={handleReset}>
+              <i className="fas fa-sync-alt"></i> Reset
+            </button>
+          </div>
+
+          {/* Elemento de Áudio exigido pelos testes */}
+          <audio
+            id="beep"
+            preload="auto"
+            ref={audioRef}
+            src="https://raw.githubusercontent.com/freeCodeCamp/cdn/master/build/testable-projects-fcc/audio/BeepSound.wav"
+          />
+        </div>
+      );
+    }
+
+    ReactDOM.render(<App />, document.getElementById("root"));
+  </script>
+</body>
+</html>
