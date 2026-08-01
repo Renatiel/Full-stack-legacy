@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Máquina de Cotações Aleatórias</title>
+
+  <!-- Script do Test Suite do freeCodeCamp -->
+  <script src="https://cdn.freecodecamp.org/testable-projects-fcc/v1/bundle.js"></script>
+
+  <!-- React & React DOM (Versão 17 para compatibilidade total com os testes) -->
+  <script src="https://unpkg.com/react@17/umd/react.production.min.js" crossorigin></script>
+  <script src="https://unpkg.com/react-dom@17/umd/react-dom.production.min.js" crossorigin></script>
+
+  <!-- Babel para transpilar JSX -->
+  <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+
+  <!-- Font Awesome para ícones -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+</head>
+<body>
+  <div id="root"></div>
+
+  <!-- Início da Aplicação React -->
+  <script type="text/babel">
+    const { useState, useEffect } = React;
+
+    const quotesDatabase = [
+      {
+        quote: "A única maneira de fazer um excelente trabalho é amar o que você faz.",
+        author: "Steve Jobs"
+      },
+      {
+        quote: "No meio da dificuldade encontra-se a oportunidade.",
+        author: "Albert Einstein"
+      },
+      {
+        quote: "A vida é o que acontece enquanto você está ocupado fazendo outros planos.",
+        author: "John Lennon"
+      },
+      {
+        quote: "O sucesso é ir de fracasso em fracasso sem perder o entusiasmo.",
+        author: "Winston Churchill"
+      },
+      {
+        quote: "Não espere. O tempo nunca será o ideal.",
+        author: "Napoleon Hill"
+      },
+      {
+        quote: "Sempre parece impossível até que seja feito.",
+        author: "Nelson Mandela"
+      }
+    ];
+
+    const colors = [
+      "#16a085",
+      "#27ae60",
+      "#2c3e50",
+      "#f39c12",
+      "#e74c3c",
+      "#9b59b6",
+      "#FB6964",
+      "#342224",
+      "#472E32",
+      "#BDBB99",
+      "#77B1A9",
+      "#73A857"
+    ];
+
+    function App() {
+      const [currentQuote, setCurrentQuote] = useState({ quote: "", author: "" });
+      const [currentColor, setCurrentColor] = useState("#2c3e50");
+
+      const getRandomQuote = () => {
+        const randomQuoteIndex = Math.floor(Math.random() * quotesDatabase.length);
+        const randomColorIndex = Math.floor(Math.random() * colors.length);
+        
+        setCurrentQuote(quotesDatabase[randomQuoteIndex]);
+        setCurrentColor(colors[randomColorIndex]);
+      };
+
+      // Carrega uma cotação aleatória na primeira renderização
+      useEffect(() => {
+        getRandomQuote();
+      }, []);
+
+      const tweetUrl = `https://twitter.com/intent/tweet?hashtags=quotes&related=freecodecamp&text=${encodeURIComponent(
+        `"${currentQuote.quote}" - ${currentQuote.author}`
+      )}`;
+
+      return (
+        <div className="main-wrapper" style={{ backgroundColor: currentColor, color: currentColor }}>
+          <div id="quote-box">
+            <div className="quote-text">
+              <i className="fa fa-quote-left"></i>
+              <span id="text">{currentQuote.quote}</span>
+            </div>
+            
+            <div className="quote-author">
+              - <span id="author">{currentQuote.author}</span>
+            </div>
+
+            <div className="buttons">
+              <a
+                id="tweet-quote"
+                className="button"
+                href={tweetUrl}
+                target="_top"
+                rel="noopener noreferrer"
+                style={{ backgroundColor: currentColor }}
+              >
+                <i className="fa-brands fa-twitter"></i>
+              </a>
+
+              <button
+                id="new-quote"
+                className="button"
+                onClick={getRandomQuote}
+                style={{ backgroundColor: currentColor }}
+              >
+                Nova cotação
+              </button>
+            </div>
+          </div>
+        </div>
+      );
+    }
+
+    ReactDOM.render(<App />, document.getElementById("root"));
+  </script>
+</body>
+</html>
