@@ -1,0 +1,270 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Heat Map - freeCodeCamp</title>
+
+  <!-- Script da Suíte de Testes do freeCodeCamp -->
+  <script src="https://cdn.freecodecamp.org/testable-projects-fcc/v1/bundle.js"></script>
+
+  <!-- Biblioteca D3.js (v7) -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/d3/7.8.5/d3.min.js"></script>
+
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background: linear-gradient(135deg, #1e2022, #2d4059);
+      color: #ffffff;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+    }
+
+    .container {
+      background-color: #222831;
+      border: 2px solid #393e46;
+      border-radius: 12px;
+      padding: 25px;
+      box-shadow: 0 15px 35px rgba(0, 0, 0, 0.6);
+      position: relative;
+    }
+
+    #title {
+      font-size: 2rem;
+      font-weight: 700;
+      text-align: center;
+      color: #00adb5;
+      margin-bottom: 5px;
+    }
+
+    #description {
+      font-size: 1.05rem;
+      text-align: center;
+      color: #eeeeee;
+      margin-bottom: 20px;
+    }
+
+    /* Estilização dos Eixos */
+    .axis path,
+    .axis line {
+      stroke: #717171;
+    }
+
+    .axis text {
+      fill: #eeeeee;
+      font-size: 12px;
+    }
+
+    /* Estilização das Células */
+    .cell {
+      cursor: pointer;
+      transition: stroke 0.15s ease;
+    }
+
+    .cell:hover {
+      stroke: #ffffff;
+      stroke-width: 1.5px;
+    }
+
+    /* Tooltip */
+    #tooltip {
+      position: absolute;
+      padding: 10px 14px;
+      background-color: rgba(15, 15, 20, 0.95);
+      border: 1px solid #00adb5;
+      border-radius: 6px;
+      color: #ffffff;
+      font-size: 0.85rem;
+      pointer-events: none;
+      opacity: 0;
+      transition: opacity 0.15s ease;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.4);
+      line-height: 1.4;
+      z-index: 10;
+      text-align: center;
+    }
+
+    /* Legenda */
+    #legend text {
+      fill: #eeeeee;
+      font-size: 11px;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="container">
+    <h1 id="title">Temperatura Superficial Global Mensal</h1>
+    <p id="description">1753 - 2015: Temperaturas baseadas na média estimada de 8.66℃</p>
+    <div id="chart"></div>
+    <div id="tooltip"></div>
+  </div>
+
+  <script>
+    // URL do dataset fornecido pelo freeCodeCamp
+    const url = 'https://raw.githubusercontent.com/freeCodeCamp/ProjectReferenceData/master/global-temperature.json';
+
+    // Nomes dos meses para o eixo Y
+    const months = [
+      'January', 'February', 'March', 'April', 'May', 'June',
+      'July', 'August', 'September', 'October', 'November', 'December'
+    ];
+
+    // Cores para a escala de temperatura (do mais frio ao mais quente)
+    const colorThresholds = [2.8, 3.9, 5.0, 6.1, 7.2, 8.3, 9.5, 10.6, 11.7, 12.8];
+    const colorScheme = [
+      '#313695', '#4575b4', '#74add1', '#abd9e9', '#e0f3f8',
+      '#ffffbf', '#fee090', '#fdae61', '#f46d43', '#d73027', '#a50026'
+    ];
+
+    // Dimensões do Gráfico
+    const margin = { top: 20, right: 30, bottom: 100, left: 100 };
+    const width = 1100 - margin.left - margin.right;
+    const height = 440 - margin.top - margin.bottom;
+
+    const tooltip = d3.select("#tooltip");
+
+    const svg = d3.select("#chart")
+      .append("svg")
+      .attr("width", width + margin.left + margin.right)
+      .attr("height", height + margin.top + margin.bottom)
+      .append("g")
+      .attr("transform", `translate(${margin.left}, ${margin.top})`);
+
+    // Busca os dados via Fetch
+    fetch(url)
+      .then(response => response.json())
+      .then(data => {
+        const baseTemp = data.baseTemperature;
+        const monthlyData = data.monthlyVariance;
+
+        // Escala de Cores baseada em limites (Threshold)
+        const colorScale = d3.scaleThreshold()
+          .domain(colorThresholds)
+          .range(colorScheme);
+
+        // Escala X (Anos)
+        const minYear = d3.min(monthlyData, d => d.year);
+        const maxYear = d3.max(monthlyData, d => d.year);
+
+        const xScale = d3.scaleBand()
+          .domain(monthlyData.map(d => d.year))
+          .range([0, width])
+          .padding(0);
+
+        // Escala Y (Meses)
+        const yScale = d3.scaleBand()
+          .domain([0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11])
+          .range([0, height])
+          .padding(0);
+
+        // Configuração dos Eixos
+        const xAxis = d3.axisBottom(xScale)
+          .tickValues(xScale.domain().filter(year => year % 10 === 0))
+          .tickFormat(year => d3.format("d")(year));
+
+        const yAxis = d3.axisLeft(yScale)
+          .tickFormat(monthIndex => months[monthIndex]);
+
+        // Renderiza Eixo X
+        svg.append("g")
+          .attr("id", "x-axis")
+          .attr("class", "axis")
+          .attr("transform", `translate(0, ${height})`)
+          .call(xAxis);
+
+        // Renderiza Eixo Y
+        svg.append("g")
+          .attr("id", "y-axis")
+          .attr("class", "axis")
+          .call(yAxis);
+
+        // Renderiza as Células (Heat Map)
+        svg.selectAll(".cell")
+          .data(monthlyData)
+          .enter()
+          .append("rect")
+          .attr("class", "cell")
+          .attr("data-month", d => d.month - 1)
+          .attr("data-year", d => d.year)
+          .attr("data-temp", d => baseTemp + d.variance)
+          .attr("x", d => xScale(d.year))
+          .attr("y", d => yScale(d.month - 1))
+          .attr("width", xScale.bandwidth())
+          .attr("height", yScale.bandwidth())
+          .attr("fill", d => colorScale(baseTemp + d.variance))
+          .on("mouseover", (event, d) => {
+            const currentTemp = (baseTemp + d.variance).toFixed(2);
+            const varianceFormatted = d.variance > 0 ? `+${d.variance.toFixed(2)}` : d.variance.toFixed(2);
+            
+            tooltip.style("opacity", 0.95)
+              .attr("data-year", d.year)
+              .html(`
+                <strong>${d.year} - ${months[d.month - 1]}</strong><br/>
+                Temperatura: ${currentTemp}℃<br/>
+                Variação: ${varianceFormatted}℃
+              `)
+              .style("left", (event.pageX - d3.select('.container').node().getBoundingClientRect().left + 15) + "px")
+              .style("top", (event.pageY - d3.select('.container').node().getBoundingClientRect().top - 40) + "px");
+          })
+          .on("mouseout", () => {
+            tooltip.style("opacity", 0);
+          });
+
+        // Configuração da Legenda
+        const legendWidth = 400;
+        const legendHeight = 30;
+        const legendRectWidth = legendWidth / colorScheme.length;
+
+        const legendXScale = d3.scaleLinear()
+          .domain([d3.min(colorThresholds) - 1, d3.max(colorThresholds) + 1])
+          .range([0, legendWidth]);
+
+        const legendAxis = d3.axisBottom(legendXScale)
+          .tickSize(10)
+          .tickValues(colorThresholds)
+          .tickFormat(d3.format(".1f"));
+
+        const legend = svg.append("g")
+          .attr("id", "legend")
+          .attr("transform", `translate(0, ${height + 50})`);
+
+        // Blocos de cor da legenda
+        legend.selectAll("rect")
+          .data(colorScheme)
+          .enter()
+          .append("rect")
+          .attr("x", (d, i) => i * legendRectWidth)
+          .attr("y", 0)
+          .attr("width", legendRectWidth)
+          .attr("height", 15)
+          .attr("fill", d => d);
+
+        // Eixo numérico da legenda
+        const legendScaleLinear = d3.scaleLinear()
+          .domain([2.8, 12.8])
+          .range([0, legendWidth]);
+
+        const legendAxisCustom = d3.axisBottom(legendScaleLinear)
+          .tickSize(10)
+          .tickValues([2.8, 3.9, 5.0, 6.1, 7.2, 8.3, 9.5, 10.6, 11.7, 12.8])
+          .tickFormat(d3.format(".1f"));
+
+        legend.append("g")
+          .attr("transform", `translate(0, 15)`)
+          .call(legendAxisCustom);
+      })
+      .catch(err => console.error("Erro ao carregar os dados:", err));
+  </script>
+</body>
+</html>
