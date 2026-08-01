@@ -1,0 +1,259 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Scatterplot Graph - freeCodeCamp</title>
+
+  <!-- Script da Suíte de Testes do freeCodeCamp -->
+  <script src="https://cdn.freecodecamp.org/testable-projects-fcc/v1/bundle.js"></script>
+
+  <!-- Biblioteca D3.js (v7) -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/d3/7.8.5/d3.min.js"></script>
+
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background: linear-gradient(135deg, #1e2022, #2d4059);
+      color: #ffffff;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+    }
+
+    .container {
+      background-color: #222831;
+      border: 2px solid #393e46;
+      border-radius: 12px;
+      padding: 25px;
+      box-shadow: 0 15px 35px rgba(0, 0, 0, 0.6);
+      position: relative;
+    }
+
+    #title {
+      font-size: 2rem;
+      font-weight: 700;
+      text-align: center;
+      color: #00adb5;
+      margin-bottom: 5px;
+    }
+
+    .subtitle {
+      font-size: 1.1rem;
+      text-align: center;
+      color: #eeeeee;
+      margin-bottom: 20px;
+    }
+
+    /* Estilização dos Eixos */
+    .axis path,
+    .axis line {
+      stroke: #717171;
+    }
+
+    .axis text {
+      fill: #eeeeee;
+      font-size: 12px;
+    }
+
+    /* Estilização dos Pontos */
+    .dot {
+      stroke: #222831;
+      stroke-width: 1.5px;
+      opacity: 0.85;
+      transition: all 0.2s ease;
+      cursor: pointer;
+    }
+
+    .dot:hover {
+      opacity: 1;
+      stroke: #ffffff;
+      stroke-width: 2.5px;
+      r: 8;
+    }
+
+    /* Tooltip */
+    #tooltip {
+      position: absolute;
+      padding: 10px 14px;
+      background-color: rgba(15, 15, 20, 0.95);
+      border: 1px solid #00adb5;
+      border-radius: 6px;
+      color: #ffffff;
+      font-size: 0.85rem;
+      pointer-events: none;
+      opacity: 0;
+      transition: opacity 0.15s ease;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.4);
+      line-height: 1.4;
+      z-index: 10;
+    }
+
+    /* Legenda */
+    #legend {
+      font-size: 0.9rem;
+      fill: #eeeeee;
+    }
+
+    .legend-label {
+      font-size: 0.85rem;
+      fill: #eeeeee;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="container">
+    <h1 id="title">Doping no Ciclismo Profissional</h1>
+    <p class="subtitle">35 Melhores Tempos na Subida do Alpe d'Huez</p>
+    <div id="chart"></div>
+    <div id="tooltip"></div>
+  </div>
+
+  <script>
+    // URL do dataset fornecido pelo freeCodeCamp
+    const url = 'https://raw.githubusercontent.com/freeCodeCamp/ProjectReferenceData/master/cyclist-data.json';
+
+    // Dimensões do Gráfico
+    const margin = { top: 60, right: 40, bottom: 60, left: 80 };
+    const width = 850 - margin.left - margin.right;
+    const height = 500 - margin.top - margin.bottom;
+
+    // Seleção da div da Tooltip
+    const tooltip = d3.select("#tooltip");
+
+    // Criação do Elemento SVG
+    const svg = d3.select("#chart")
+      .append("svg")
+      .attr("width", width + margin.left + margin.right)
+      .attr("height", height + margin.top + margin.bottom)
+      .append("g")
+      .attr("transform", `translate(${margin.left}, ${margin.top})`);
+
+    // Busca os dados via Fetch
+    fetch(url)
+      .then(response => response.json())
+      .then(data => {
+        // Converte os dados para objetos Date adequados
+        data.forEach(d => {
+          const parsedTime = d.Time.split(':');
+          d.TimeDate = new Date(1970, 0, 1, 0, parsedTime[0], parsedTime[1]);
+        });
+
+        // Configuração dos Domínios dos Eixos (com margens de respiro)
+        const xMin = d3.min(data, d => d.Year) - 1;
+        const xMax = d3.max(data, d => d.Year) + 1;
+
+        // Escala X (Ano - Inteiros)
+        const xScale = d3.scaleLinear()
+          .domain([xMin, xMax])
+          .range([0, width]);
+
+        // Escala Y (Tempo mm:ss - Objeto Date)
+        const yScale = d3.scaleTime()
+          .domain(d3.extent(data, d => d.TimeDate))
+          .range([0, height]); // Invertido para que tempos menores fiquem no topo
+
+        // Definição dos Eixos
+        const xAxis = d3.axisBottom(xScale)
+          .tickFormat(d3.format("d")); // Formato de ano sem vírgula
+
+        const yAxis = d3.axisLeft(yScale)
+          .tickFormat(d3.timeFormat("%M:%S"));
+
+        // Renderiza o Eixo X
+        svg.append("g")
+          .attr("id", "x-axis")
+          .attr("class", "axis")
+          .attr("transform", `translate(0, ${height})`)
+          .call(xAxis);
+
+        // Renderiza o Eixo Y
+        svg.append("g")
+          .attr("id", "y-axis")
+          .attr("class", "axis")
+          .call(yAxis);
+
+        // Rótulo do Eixo Y
+        svg.append("text")
+          .attr("transform", "rotate(-90)")
+          .attr("x", -height / 2)
+          .attr("y", -50)
+          .style("text-anchor", "middle")
+          .style("fill", "#00adb5")
+          .style("font-size", "0.9rem")
+          .text("Tempo em Minutos");
+
+        // Desenho dos Pontos (Scatter Plot)
+        svg.selectAll(".dot")
+          .data(data)
+          .enter()
+          .append("circle")
+          .attr("class", "dot")
+          .attr("r", 6)
+          .attr("cx", d => xScale(d.Year))
+          .attr("cy", d => yScale(d.TimeDate))
+          .attr("data-xvalue", d => d.Year)
+          .attr("data-yvalue", d => d.TimeDate.toISOString())
+          .style("fill", d => d.Doping ? "#ff5722" : "#00adb5")
+          .on("mouseover", (event, d) => {
+            tooltip.style("opacity", 0.95)
+              .attr("data-year", d.Year)
+              .html(`
+                <strong>${d.Name}: ${d.Nationality}</strong><br/>
+                Ano: ${d.Year} | Tempo: ${d.Time}<br/>
+                ${d.Doping ? `<br/><span style="color: #ff5722;">${d.Doping}</span>` : '<br/><span style="color: #00adb5;">Sem alegações de doping</span>'}
+              `)
+              .style("left", (event.pageX - d3.select('.container').node().getBoundingClientRect().left + 15) + "px")
+              .style("top", (event.pageY - d3.select('.container').node().getBoundingClientRect().top - 20) + "px");
+          })
+          .on("mouseout", () => {
+            tooltip.style("opacity", 0);
+          });
+
+        // Configuração da Legenda
+        const legendContainer = svg.append("g")
+          .attr("id", "legend")
+          .attr("transform", `translate(${width - 220}, ${height - 100})`);
+
+        // Item 1 da Legenda (Com Doping)
+        legendContainer.append("rect")
+          .attr("x", 0)
+          .attr("y", 0)
+          .attr("width", 15)
+          .attr("height", 15)
+          .style("fill", "#ff5722");
+
+        legendContainer.append("text")
+          .attr("x", 22)
+          .attr("y", 12)
+          .attr("class", "legend-label")
+          .text("Com alegações de doping");
+
+        // Item 2 da Legenda (Sem Doping)
+        legendContainer.append("rect")
+          .attr("x", 0)
+          .attr("y", 25)
+          .attr("width", 15)
+          .attr("height", 15)
+          .style("fill", "#00adb5");
+
+        legendContainer.append("text")
+          .attr("x", 22)
+          .attr("y", 37)
+          .attr("class", "legend-label")
+          .text("Sem alegações de doping");
+      })
+      .catch(err => console.error("Erro ao carregar os dados:", err));
+  </script>
+</body>
+</html>
