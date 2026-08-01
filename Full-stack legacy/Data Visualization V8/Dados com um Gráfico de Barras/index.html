@@ -1,0 +1,202 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Gráfico de Barras - PIB dos EUA</title>
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
+      color: #f8fafc;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+    }
+
+    .card {
+      background-color: #1e293b;
+      border: 1px solid #334155;
+      border-radius: 12px;
+      padding: 24px;
+      box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.5), 0 8px 10px -6px rgba(0, 0, 0, 0.3);
+      position: relative;
+    }
+
+    #title {
+      text-align: center;
+      font-size: 1.75rem;
+      font-weight: 700;
+      margin-bottom: 20px;
+      color: #38bdf8;
+    }
+
+    .bar {
+      fill: #38bdf8;
+      transition: fill 0.15s ease;
+    }
+
+    .bar:hover {
+      fill: #f43f5e;
+    }
+
+    /* Estilização dos Eixos D3 */
+    .axis path,
+    .axis line {
+      stroke: #64748b;
+    }
+
+    .axis text {
+      fill: #94a3b8;
+      font-size: 12px;
+    }
+
+    /* Tooltip conforme especificação da História #12 e #13 */
+    #tooltip {
+      position: absolute;
+      padding: 10px 14px;
+      background: rgba(15, 23, 42, 0.95);
+      border: 1px solid #38bdf8;
+      color: #f8fafc;
+      border-radius: 6px;
+      pointer-events: none;
+      font-size: 0.875rem;
+      box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.5);
+      opacity: 0;
+      transition: opacity 0.2s ease;
+      text-align: center;
+      line-height: 1.4;
+    }
+
+    .source-info {
+      text-align: center;
+      margin-top: 12px;
+      font-size: 0.8rem;
+      color: #64748b;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="card">
+    <!-- História #1: Título com id="title" -->
+    <h1 id="title">Produto Interno Bruto (PIB) dos EUA</h1>
+    
+    <!-- Div onde o SVG do gráfico será injetado -->
+    <div id="chart"></div>
+    
+    <!-- História #12 & #13: Tooltip com id="tooltip" -->
+    <div id="tooltip"></div>
+    
+    <p class="source-info">Fonte: Federal Reserve Economic Data (1947 - 2015)</p>
+  </div>
+
+  <!-- Suíte de Testes Oficial do freeCodeCamp -->
+  <script src="https://cdn.freecodecamp.org/testable-projects-fcc/v1/bundle.js"></script>
+  <!-- Biblioteca D3.js (v7) -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/d3/7.8.5/d3.min.js"></script>
+
+  <script>
+    const width = 800;
+    const height = 400;
+    const padding = 60;
+
+    // Criando o elemento SVG
+    const svg = d3.select("#chart")
+      .append("svg")
+      .attr("width", width)
+      .attr("height", height);
+
+    const tooltip = d3.select("#tooltip");
+
+    // Requisição dos dados do PIB
+    fetch("https://raw.githubusercontent.com/freeCodeCamp/ProjectReferenceData/master/GDP-data.json")
+      .then(response => response.json())
+      .then(data => {
+        const dataset = data.data;
+
+        // Converter datas para objetos Date para as escalas
+        const parsedDates = dataset.map(d => new Date(d[0]));
+
+        const xMin = d3.min(parsedDates);
+        const xMax = d3.max(parsedDates);
+
+        // Escala X (Tempo)
+        const xScale = d3.scaleTime()
+          .domain([xMin, xMax])
+          .range([padding, width - padding]);
+
+        // Escala Y (Linear para o PIB)
+        const gdpMax = d3.max(dataset, d => d[1]);
+        const yScale = d3.scaleLinear()
+          .domain([0, gdpMax])
+          .range([height - padding, padding]);
+
+        // Eixo X
+        const xAxis = d3.axisBottom(xScale);
+        
+        // História #2: Elemento g do eixo-x com id="x-axis"
+        svg.append("g")
+          .attr("id", "x-axis")
+          .attr("class", "axis")
+          .attr("transform", `translate(0, ${height - padding})`)
+          .call(xAxis);
+
+        // Eixo Y
+        const yAxis = d3.axisLeft(yScale);
+        
+        // História #3: Elemento g do eixo-y com id="y-axis"
+        svg.append("g")
+          .attr("id", "y-axis")
+          .attr("class", "axis")
+          .attr("transform", `translate(${padding}, 0)`)
+          .call(yAxis);
+
+        // Largura individual de cada barra
+        const barWidth = (width - 2 * padding) / dataset.length;
+
+        // História #5 a #11: Desenho das barras (<rect class="bar">)
+        svg.selectAll("rect")
+          .data(dataset)
+          .enter()
+          .append("rect")
+          .attr("class", "bar")
+          .attr("data-date", d => d[0]) // História #6 & #7
+          .attr("data-gdp", d => d[1])   // História #6 & #8
+          .attr("x", d => xScale(new Date(d[0]))) // História #10
+          .attr("y", d => yScale(d[1]))           // História #11
+          .attr("width", barWidth)
+          .attr("height", d => (height - padding) - yScale(d[1])) // História #9
+          // História #12 & #13: Interação de Hover com Tooltip
+          .on("mouseover", (event, d) => {
+            const [year, month] = d[0].split("-");
+            let quarter = "";
+            if (month === "01") quarter = "Q1";
+            else if (month === "04") quarter = "Q2";
+            else if (month === "07") quarter = "Q3";
+            else if (month === "10") quarter = "Q4";
+
+            tooltip
+              .style("opacity", 0.9)
+              .attr("data-date", d[0]) // História #13
+              .html(`<strong>${year} ${quarter}</strong><br/>$${d[1].toLocaleString()} Bilhões`)
+              .style("left", (event.pageX + 15) + "px")
+              .style("top", (event.pageY - 40) + "px");
+          })
+          .on("mouseout", () => {
+            tooltip.style("opacity", 0);
+          });
+      })
+      .catch(error => console.error("Erro ao carregar os dados:", error));
+  </script>
+</body>
+</html>
