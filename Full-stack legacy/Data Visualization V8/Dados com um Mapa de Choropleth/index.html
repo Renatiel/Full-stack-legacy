@@ -1,0 +1,240 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Choropleth Map - freeCodeCamp</title>
+
+  <!-- Script da Suíte de Testes do freeCodeCamp -->
+  <script src="https://cdn.freecodecamp.org/testable-projects-fcc/v1/bundle.js"></script>
+
+  <!-- Biblioteca D3.js (v7) e TopoJSON (v3) -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/d3/7.8.5/d3.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/topojson/3.0.2/topojson.min.js"></script>
+
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background: linear-gradient(135deg, #1e2022, #2d4059);
+      color: #ffffff;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+    }
+
+    .container {
+      background-color: #222831;
+      border: 2px solid #393e46;
+      border-radius: 12px;
+      padding: 25px;
+      box-shadow: 0 15px 35px rgba(0, 0, 0, 0.6);
+      position: relative;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+
+    #title {
+      font-size: 2rem;
+      font-weight: 700;
+      text-align: center;
+      color: #00adb5;
+      margin-bottom: 5px;
+    }
+
+    #description {
+      font-size: 1.05rem;
+      text-align: center;
+      color: #eeeeee;
+      margin-bottom: 15px;
+    }
+
+    /* Estilização dos Condados e Fronteiras */
+    .county {
+      cursor: pointer;
+      transition: opacity 0.15s ease;
+    }
+
+    .county:hover {
+      stroke: #ffffff;
+      stroke-width: 1.2px;
+      opacity: 0.9;
+    }
+
+    .states {
+      fill: none;
+      stroke: #222831;
+      stroke-linejoin: round;
+    }
+
+    /* Tooltip */
+    #tooltip {
+      position: absolute;
+      padding: 10px 14px;
+      background-color: rgba(15, 15, 20, 0.95);
+      border: 1px solid #00adb5;
+      border-radius: 6px;
+      color: #ffffff;
+      font-size: 0.85rem;
+      pointer-events: none;
+      opacity: 0;
+      transition: opacity 0.15s ease;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.4);
+      line-height: 1.4;
+      z-index: 10;
+      text-align: center;
+    }
+
+    /* Legenda */
+    #legend {
+      margin-top: 10px;
+    }
+
+    #legend text {
+      fill: #eeeeee;
+      font-size: 11px;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="container">
+    <h1 id="title">Escolaridade nos Estados Unidos</h1>
+    <p id="description">
+      Porcentagem de adultos com 25 anos ou mais com grau de bacharelado ou superior (2010-2014)
+    </p>
+    <div id="chart"></div>
+    <div id="tooltip"></div>
+  </div>
+
+  <script>
+    // URLs dos Datasets fornecidos pelo freeCodeCamp
+    const EDUCATION_URL = 'https://cdn.freecodecamp.org/testable-projects-fcc/data/choropleth_map/for_user_education.json';
+    const COUNTIES_URL = 'https://cdn.freecodecamp.org/testable-projects-fcc/data/choropleth_map/counties.json';
+
+    // Dimensões do Gráfico
+    const width = 960;
+    const height = 600;
+
+    const tooltip = d3.select("#tooltip");
+
+    const svg = d3.select("#chart")
+      .append("svg")
+      .attr("width", width)
+      .attr("height", height);
+
+    // Carrega ambos os arquivos JSON simultaneamente
+    Promise.all([
+      d3.json(COUNTIES_URL),
+      d3.json(EDUCATION_URL)
+    ]).then(([usData, eduData]) => {
+
+      // Cria um mapa/dicionário para busca rápida dos dados de educação por FIPS
+      const eduMap = new Map();
+      eduData.forEach(item => {
+        eduMap.set(item.fips, item);
+      });
+
+      // Escala de cores (limiares de porcentagem de graduação)
+      const colorThresholds = [12, 21, 30, 39, 48, 57, 66];
+      const colorScheme = d3.schemeBlues[8];
+
+      const colorScale = d3.scaleThreshold()
+        .domain(colorThresholds)
+        .range(colorScheme);
+
+      // Gerador de caminhos geográficos do D3
+      const path = d3.geoPath();
+
+      // Converte dados de condados do TopoJSON para GeoJSON
+      const counties = topojson.feature(usData, usData.objects.counties).features;
+
+      // Desenha os Condados (Choropleth)
+      svg.append("g")
+        .selectAll("path")
+        .data(counties)
+        .enter()
+        .append("path")
+        .attr("class", "county")
+        .attr("data-fips", d => d.id)
+        .attr("data-education", d => {
+          const countyData = eduMap.get(d.id);
+          return countyData ? countyData.bachelorsOrHigher : 0;
+        })
+        .attr("fill", d => {
+          const countyData = eduMap.get(d.id);
+          return countyData ? colorScale(countyData.bachelorsOrHigher) : "#ccc";
+        })
+        .attr("d", path)
+        .on("mouseover", (event, d) => {
+          const countyData = eduMap.get(d.id);
+          if (!countyData) return;
+
+          tooltip.style("opacity", 0.95)
+            .attr("data-education", countyData.bachelorsOrHigher)
+            .html(`
+              <strong>${countyData.area_name}, ${countyData.state}</strong><br/>
+              Ensino Superior: ${countyData.bachelorsOrHigher}%
+            `)
+            .style("left", (event.pageX - d3.select('.container').node().getBoundingClientRect().left + 15) + "px")
+            .style("top", (event.pageY - d3.select('.container').node().getBoundingClientRect().top - 30) + "px");
+        })
+        .on("mouseout", () => {
+          tooltip.style("opacity", 0);
+        });
+
+      // Desenha as divisões dos Estados para melhor visualização
+      svg.append("path")
+        .datum(topojson.mesh(usData, usData.objects.states, (a, b) => a !== b))
+        .attr("class", "states")
+        .attr("d", path);
+
+      // Configuração da Legenda
+      const legendWidth = 260;
+      const legendHeight = 40;
+      const legendX = width - legendWidth - 50;
+      const legendY = 15;
+
+      const legendXScale = d3.scaleLinear()
+        .domain([3, 75])
+        .range([0, legendWidth]);
+
+      const legendAxis = d3.axisBottom(legendXScale)
+        .tickSize(13)
+        .tickFormat(d => `${Math.round(d)}%`)
+        .tickValues(colorThresholds);
+
+      const legend = svg.append("g")
+        .attr("id", "legend")
+        .attr("transform", `translate(${legendX}, ${legendY})`);
+
+      // Blocos de cores da legenda
+      const legendDomain = [3, ...colorThresholds, 75];
+      legend.selectAll("rect")
+        .data(colorScheme)
+        .enter()
+        .append("rect")
+        .attr("height", 8)
+        .attr("x", (d, i) => legendXScale(legendDomain[i]))
+        .attr("width", (d, i) => legendXScale(legendDomain[i + 1]) - legendXScale(legendDomain[i]))
+        .attr("fill", d => d);
+
+      legend.append("g")
+        .attr("transform", "translate(0, 0)")
+        .call(legendAxis)
+        .select(".domain")
+        .remove();
+
+    }).catch(err => console.error("Erro ao carregar os dados:", err));
+  </script>
+</body>
+</html>
