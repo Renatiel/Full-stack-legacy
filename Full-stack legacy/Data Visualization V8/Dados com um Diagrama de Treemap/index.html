@@ -1,0 +1,260 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Treemap Diagram - freeCodeCamp</title>
+
+  <!-- Script da Suíte de Testes do freeCodeCamp -->
+  <script src="https://cdn.freecodecamp.org/testable-projects-fcc/v1/bundle.js"></script>
+
+  <!-- Biblioteca D3.js (v7) -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/d3/7.8.5/d3.min.js"></script>
+
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background: linear-gradient(135deg, #1e2022, #2d4059);
+      color: #ffffff;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+    }
+
+    .container {
+      background-color: #222831;
+      border: 2px solid #393e46;
+      border-radius: 12px;
+      padding: 25px;
+      box-shadow: 0 15px 35px rgba(0, 0, 0, 0.6);
+      position: relative;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+
+    #title {
+      font-size: 2rem;
+      font-weight: 700;
+      text-align: center;
+      color: #00adb5;
+      margin-bottom: 5px;
+    }
+
+    #description {
+      font-size: 1.05rem;
+      text-align: center;
+      color: #eeeeee;
+      margin-bottom: 20px;
+    }
+
+    /* Estilização dos Blocos do Treemap (Tiles) */
+    .tile {
+      stroke: #222831;
+      stroke-width: 1px;
+      cursor: pointer;
+      transition: opacity 0.15s ease;
+    }
+
+    .tile:hover {
+      opacity: 0.8;
+      stroke: #ffffff;
+      stroke-width: 1.5px;
+    }
+
+    .tile-text {
+      font-size: 9px;
+      fill: #ffffff;
+      pointer-events: none;
+      user-select: none;
+    }
+
+    /* Tooltip */
+    #tooltip {
+      position: absolute;
+      padding: 10px 14px;
+      background-color: rgba(15, 15, 20, 0.95);
+      border: 1px solid #00adb5;
+      border-radius: 6px;
+      color: #ffffff;
+      font-size: 0.85rem;
+      pointer-events: none;
+      opacity: 0;
+      transition: opacity 0.15s ease;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.4);
+      line-height: 1.4;
+      z-index: 10;
+      text-align: center;
+    }
+
+    /* Legenda */
+    #legend {
+      margin-top: 20px;
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      max-width: 900px;
+    }
+
+    .legend-item-group {
+      display: flex;
+      align-items: center;
+      margin: 4px 12px;
+    }
+
+    .legend-item {
+      stroke: #222831;
+      stroke-width: 1px;
+    }
+
+    .legend-text {
+      font-size: 12px;
+      fill: #eeeeee;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="container">
+    <h1 id="title">Vendas de Jogos de Videogame</h1>
+    <p id="description">Os 100 Jogos Mais Vendidos Agrupados por Plataforma</p>
+    <div id="chart"></div>
+    <div id="tooltip"></div>
+  </div>
+
+  <script>
+    // URL do dataset de Vendas de Jogos de Videogame
+    const DATASET_URL = 'https://cdn.freecodecamp.org/testable-projects-fcc/data/tree_map/video-game-sales-data.json';
+
+    // Dimensões do Gráfico
+    const width = 1000;
+    const height = 600;
+
+    const tooltip = d3.select("#tooltip");
+
+    const svg = d3.select("#chart")
+      .append("svg")
+      .attr("width", width)
+      .attr("height", height);
+
+    // Esquema de cores vibrantes para as categorias/plataformas
+    const colorScheme = [
+      '#1f77b4', '#aec7e8', '#ff7f0e', '#ffbb78', '#2ca02c',
+      '#98df8a', '#d62728', '#ff9896', '#9467bd', '#c5b0d5',
+      '#8c564b', '#c49c94', '#e377c2', '#f7b6d2', '#7f7f7f',
+      '#c7c7c7', '#bcbd22', '#dbdb8d', '#17becf', '#9edae5'
+    ];
+
+    const colorScale = d3.scaleOrdinal().range(colorScheme);
+
+    // Carrega os dados JSON via d3.json
+    d3.json(DATASET_URL).then(data => {
+
+      // Cria a hierarquia do D3 e calcula os valores acumulados
+      const root = d3.hierarchy(data)
+        .sum(d => d.value)
+        .sort((a, b) => b.value - a.value);
+
+      // Aplica o layout de Treemap
+      const treemap = d3.treemap()
+        .size([width, height])
+        .paddingInner(1);
+
+      treemap(root);
+
+      // Cria um grupo para cada nó folha (Game/Tile)
+      const cell = svg.selectAll("g")
+        .data(root.leaves())
+        .enter()
+        .append("g")
+        .attr("transform", d => `translate(${d.x0}, ${d.y0})`);
+
+      // Desenha os retângulos dos blocos (Tiles)
+      cell.append("rect")
+        .attr("class", "tile")
+        .attr("data-name", d => d.data.name)
+        .attr("data-category", d => d.data.category)
+        .attr("data-value", d => d.data.value)
+        .attr("width", d => d.x1 - d.x0)
+        .attr("height", d => d.y1 - d.y0)
+        .attr("fill", d => colorScale(d.data.category))
+        .on("mouseover", (event, d) => {
+          tooltip.style("opacity", 0.95)
+            .attr("data-value", d.data.value)
+            .html(`
+              <strong>${d.data.name}</strong><br/>
+              Plataforma: ${d.data.category}<br/>
+              Vendas: ${d.data.value} milhões
+            `)
+            .style("left", (event.pageX - d3.select('.container').node().getBoundingClientRect().left + 15) + "px")
+            .style("top", (event.pageY - d3.select('.container').node().getBoundingClientRect().top - 30) + "px");
+        })
+        .on("mouseout", () => {
+          tooltip.style("opacity", 0);
+        });
+
+      // Adiciona o texto descritivo dentro de cada bloco
+      cell.append("text")
+        .attr("class", "tile-text")
+        .selectAll("tspan")
+        .data(d => d.data.name.split(/(?=[A-Z][a-z])|\s+/g)) // Quebra o nome em palavras para caber melhor
+        .enter()
+        .append("tspan")
+        .attr("x", 4)
+        .attr("y", (d, i) => 13 + i * 10)
+        .text(d => d);
+
+      // Extrai todas as categorias únicas para construir a legenda
+      const categories = root.leaves()
+        .map(nodes => nodes.data.category)
+        .filter((category, index, self) => self.indexOf(category) === index);
+
+      // Configuração da Legenda (SVG)
+      const legendWidth = 900;
+      const legendRectSize = 18;
+      const legendHSpacing = 150;
+      const legendVSpacing = 10;
+      const itemsPerRow = Math.floor(legendWidth / legendHSpacing);
+
+      const legendSvg = d3.select(".container")
+        .append("svg")
+        .attr("id", "legend")
+        .attr("width", legendWidth)
+        .attr("height", Math.ceil(categories.length / itemsPerRow) * (legendRectSize + legendVSpacing) + 20);
+
+      const legendGroup = legendSvg.selectAll("g")
+        .data(categories)
+        .enter()
+        .append("g")
+        .attr("transform", (d, i) => {
+          const x = (i % itemsPerRow) * legendHSpacing;
+          const y = Math.floor(i / itemsPerRow) * (legendRectSize + legendVSpacing);
+          return `translate(${x}, ${y})`;
+        });
+
+      // Elementos rect na legenda com a classe .legend-item
+      legendGroup.append("rect")
+        .attr("class", "legend-item")
+        .attr("width", legendRectSize)
+        .attr("height", legendRectSize)
+        .attr("fill", d => colorScale(d));
+
+      legendGroup.append("text")
+        .attr("class", "legend-text")
+        .attr("x", legendRectSize + 6)
+        .attr("y", legendRectSize - 4)
+        .text(d => d);
+
+    }).catch(err => console.error("Erro ao carregar os dados:", err));
+  </script>
+</body>
+</html>
